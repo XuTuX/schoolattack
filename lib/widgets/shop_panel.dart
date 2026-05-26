@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../app_theme.dart';
+import '../models/character.dart';
 import '../models/game_state.dart';
 import 'game_board.dart'; // DragData 사용
 
@@ -416,167 +417,50 @@ class ShopPanel extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         SizedBox(
-          height: 155,
-          child: Row(
-            children: List.generate(5, (index) {
-              final template = gameState.shopCards[index];
+          height: 178,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              children: List.generate(5, (index) {
+                final template = gameState.shopCards[index];
 
-              if (template == null) {
-                return Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceCard.withValues(alpha: 0.7),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: AppColors.outline.withValues(alpha: 0.45),
-                          width: 2),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        '품절',
-                        style: TextStyle(
-                            color: AppColors.textDim,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 11),
+                if (template == null) {
+                  return const _SoldOutShopCard();
+                }
+
+                final gradeColor = AppColors.getGradeColor(template.grade);
+
+                return SizedBox(
+                  width: 116,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        final success = gameState.buyCharacter(index);
+                        if (!success) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                gameState.gold < template.cost
+                                    ? '골드가 부족합니다!'
+                                    : '대기석에 빈 자리가 없습니다!',
+                              ),
+                              duration: const Duration(seconds: 1),
+                            ),
+                          );
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(10),
+                      child: _ShopCard(
+                        template: template,
+                        gradeColor: gradeColor,
                       ),
                     ),
                   ),
                 );
-              }
-
-              final gradeColor = AppColors.getGradeColor(template.grade);
-
-              return Expanded(
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () {
-                      final success = gameState.buyCharacter(index);
-                      if (!success) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              gameState.gold < template.cost
-                                  ? '골드가 부족합니다!'
-                                  : '대기석에 빈 자리가 없습니다!',
-                            ),
-                            duration: const Duration(seconds: 1),
-                          ),
-                        );
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 3),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceCard,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                            color: gradeColor.withValues(alpha: 0.4),
-                            width: 2.5),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.outline.withValues(alpha: 0.14),
-                            blurRadius: 0,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          // ─── 등급 컬러 스트라이프 ───
-                          Container(
-                            width: double.infinity,
-                            height: 3,
-                            decoration: BoxDecoration(
-                              color: gradeColor,
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(10),
-                                topRight: Radius.circular(10),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.all(6),
-                              child: Column(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 5, vertical: 1),
-                                    decoration: BoxDecoration(
-                                      color: gradeColor.withValues(alpha: 0.12),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text(
-                                      AppColors.getGradeText(template.grade),
-                                      style: TextStyle(
-                                        color: gradeColor,
-                                        fontSize: 8,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  Text(template.emoji,
-                                      style: const TextStyle(fontSize: 28)),
-                                  Text(
-                                    template.name,
-                                    style: const TextStyle(
-                                      color: AppColors.textPrimary,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  Text(
-                                    template.description,
-                                    style: const TextStyle(
-                                        color: AppColors.textDim, fontSize: 7),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 3),
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          AppColors.neonGold
-                                              .withValues(alpha: 0.15),
-                                          AppColors.neonGold
-                                              .withValues(alpha: 0.05),
-                                        ],
-                                      ),
-                                      borderRadius: BorderRadius.circular(6),
-                                      border: Border.all(
-                                          color: AppColors.neonGold
-                                              .withValues(alpha: 0.5),
-                                          width: 1),
-                                    ),
-                                    child: Text(
-                                      '🪙 ${template.cost}G',
-                                      style: const TextStyle(
-                                        color: AppColors.neonGold,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }),
+              }),
+            ),
           ),
         ),
         const SizedBox(height: 14),
@@ -765,6 +649,214 @@ class ShopPanel extends StatelessWidget {
       icon: Icon(icon, size: 18),
       color: color,
       onPressed: onPressed,
+    );
+  }
+}
+
+class _ShopCard extends StatelessWidget {
+  final CharacterTemplate template;
+  final Color gradeColor;
+
+  const _ShopCard({
+    required this.template,
+    required this.gradeColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.outline, width: 2.5),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.outline.withValues(alpha: 0.22),
+            blurRadius: 0,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            top: 4,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: gradeColor.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 28,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: gradeColor,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(13),
+                ),
+                border: const Border(
+                  bottom: BorderSide(color: AppColors.outline, width: 2),
+                ),
+              ),
+              child: Text(
+                AppColors.getGradeText(template.grade),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 34, 8, 8),
+            child: Column(
+              children: [
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      template.emoji,
+                      style: const TextStyle(fontSize: 42),
+                    ),
+                  ),
+                ),
+                Text(
+                  template.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 7),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _StatBubble(
+                      icon: Icons.flash_on_rounded,
+                      value: template.attack,
+                      color: AppColors.neonGold,
+                    ),
+                    _CostBubble(cost: template.cost),
+                    _StatBubble(
+                      icon: Icons.favorite_rounded,
+                      value: template.maxHp,
+                      color: AppColors.damageRed,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SoldOutShopCard extends StatelessWidget {
+  const _SoldOutShopCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 116,
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: AppColors.surfaceCard.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.outline.withValues(alpha: 0.45),
+          width: 2.5,
+        ),
+      ),
+      child: const Text(
+        '품절',
+        style: TextStyle(
+          color: AppColors.textDim,
+          fontWeight: FontWeight.w900,
+          fontSize: 13,
+        ),
+      ),
+    );
+  }
+}
+
+class _StatBubble extends StatelessWidget {
+  final IconData icon;
+  final int value;
+  final Color color;
+
+  const _StatBubble({
+    required this.icon,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 31,
+      height: 27,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(9),
+        border: Border.all(color: AppColors.outline, width: 1.6),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: Colors.white, size: 10),
+          Text(
+            '$value',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 9,
+              fontWeight: FontWeight.w900,
+              height: 0.9,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CostBubble extends StatelessWidget {
+  final int cost;
+
+  const _CostBubble({required this.cost});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 27,
+      height: 27,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: AppColors.surfaceCard,
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.outline, width: 1.6),
+      ),
+      child: Text(
+        '${cost}G',
+        style: const TextStyle(
+          color: AppColors.textPrimary,
+          fontSize: 9,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
     );
   }
 }

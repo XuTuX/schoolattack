@@ -214,190 +214,202 @@ class _LobbyScreenState extends State<LobbyScreen>
   Widget build(BuildContext context) {
     final gameState = Provider.of<GameState>(context, listen: false);
 
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // ─── 떠다니는 이모지 캐릭터들 ───
-            AnimatedBuilder(
-              animation: _floatAnimation,
-              builder: (context, child) {
-                return Transform.translate(
-                  offset: Offset(0, _floatAnimation.value),
-                  child: child,
-                );
-              },
-              child: const _FloatingEmojis(),
-            ),
-            const SizedBox(height: 20),
-
-            const Text(
-              '급식실 대소동',
-              style: TextStyle(
-                color: AppColors.neonGold,
-                fontSize: 38,
-                fontWeight: FontWeight.w900,
-                shadows: [
-                  Shadow(
-                    color: AppColors.outline,
-                    blurRadius: 0,
-                    offset: Offset(0, 3),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxContentWidth = constraints.maxWidth < 520 ? 280.0 : 360.0;
+        final contentWidth = min(constraints.maxWidth - 48, maxContentWidth);
+        return Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: SizedBox(
+              width: contentWidth,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // ─── 떠다니는 이모지 캐릭터들 ───
+                  AnimatedBuilder(
+                    animation: _floatAnimation,
+                    builder: (context, child) {
+                      return Transform.translate(
+                        offset: Offset(0, _floatAnimation.value),
+                        child: child,
+                      );
+                    },
+                    child: const _FloatingEmojis(),
                   ),
-                  Shadow(
-                    color: Colors.white,
-                    blurRadius: 0,
-                    offset: Offset(0, -2),
+                  const SizedBox(height: 20),
+
+                  const Text(
+                    '급식실 대소동',
+                    style: TextStyle(
+                      color: AppColors.neonGold,
+                      fontSize: 38,
+                      fontWeight: FontWeight.w900,
+                      shadows: [
+                        Shadow(
+                          color: AppColors.outline,
+                          blurRadius: 0,
+                          offset: Offset(0, 3),
+                        ),
+                        Shadow(
+                          color: Colors.white,
+                          blurRadius: 0,
+                          offset: Offset(0, -2),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Text(
+                    'SCHOOL LUNCH AUTO BATTLE',
+                    style: TextStyle(
+                      color: AppColors.neonPink,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceCard,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: AppColors.outline,
+                        width: 2,
+                      ),
+                    ),
+                    child: const Text(
+                      '타일을 넓히고, 배치를 다듬고, 자동 전투로 10승까지',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  // ─── 이름 입력 & 게임 시작 패널 ───
+                  SizedBox(
+                    width: min(320, contentWidth),
+                    child: GlassPanel(
+                      borderNeonColor: AppColors.neonCyan,
+                      child: Column(
+                        children: [
+                          const Text(
+                            '플레이어 이름',
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: _nameController,
+                            textAlign: TextAlign.center,
+                            maxLength: 8,
+                            decoration: InputDecoration(
+                              counterText: '',
+                              filled: true,
+                              fillColor: AppColors.surfaceCard,
+                              contentPadding:
+                                  const EdgeInsets.symmetric(vertical: 12),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    color: AppColors.outline, width: 2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: const BorderSide(
+                                    color: AppColors.neonCyan, width: 3),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 28),
+
+                          // ─── 펄스 글로우 시작 버튼 ───
+                          AnimatedBuilder(
+                            animation: _pulseAnimation,
+                            builder: (context, child) {
+                              final glowOpacity =
+                                  0.15 + _pulseAnimation.value * 0.2;
+                              return Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.outline.withValues(
+                                          alpha: glowOpacity + 0.10),
+                                      blurRadius: 0,
+                                      offset: const Offset(0, 5),
+                                    ),
+                                  ],
+                                ),
+                                child: child,
+                              );
+                            },
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.neonCyan,
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    side: const BorderSide(
+                                      color: AppColors.outline,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 40, vertical: 16),
+                                ),
+                                onPressed: () {
+                                  if (_nameController.text.trim().isNotEmpty) {
+                                    gameState.playerName =
+                                        _nameController.text.trim();
+                                  }
+                                  gameState.enterPreparePhase();
+                                },
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.play_arrow_rounded, size: 20),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      '게임 시작',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 1,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-            const Text(
-              'SCHOOL LUNCH AUTO BATTLE',
-              style: TextStyle(
-                color: AppColors.neonPink,
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceCard,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: AppColors.outline,
-                  width: 2,
-                ),
-              ),
-              child: const Text(
-                '타일을 넓히고, 배치를 다듬고, 자동 전투로 10승까지',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-            const SizedBox(height: 32),
-
-            // ─── 이름 입력 & 게임 시작 패널 ───
-            SizedBox(
-              width: 320,
-              child: GlassPanel(
-                borderNeonColor: AppColors.neonCyan,
-                child: Column(
-                  children: [
-                    const Text(
-                      '플레이어 이름',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _nameController,
-                      textAlign: TextAlign.center,
-                      maxLength: 8,
-                      decoration: InputDecoration(
-                        counterText: '',
-                        filled: true,
-                        fillColor: AppColors.surfaceCard,
-                        contentPadding:
-                            const EdgeInsets.symmetric(vertical: 12),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: AppColors.outline, width: 2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(
-                              color: AppColors.neonCyan, width: 3),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-
-                    // ─── 펄스 글로우 시작 버튼 ───
-                    AnimatedBuilder(
-                      animation: _pulseAnimation,
-                      builder: (context, child) {
-                        final glowOpacity = 0.15 + _pulseAnimation.value * 0.2;
-                        return Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.outline
-                                    .withValues(alpha: glowOpacity + 0.10),
-                                blurRadius: 0,
-                                offset: Offset(0, 5),
-                              ),
-                            ],
-                          ),
-                          child: child,
-                        );
-                      },
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.neonCyan,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: const BorderSide(
-                                color: AppColors.outline,
-                                width: 2,
-                              ),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 40, vertical: 16),
-                          ),
-                          onPressed: () {
-                            if (_nameController.text.trim().isNotEmpty) {
-                              gameState.playerName =
-                                  _nameController.text.trim();
-                            }
-                            gameState.enterPreparePhase();
-                          },
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.play_arrow_rounded, size: 20),
-                              SizedBox(width: 6),
-                              Text(
-                                '게임 시작',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 1,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -409,17 +421,20 @@ class _FloatingEmojis extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const emojis = ['🧑‍🍳', '⚽', '👮', '📝', '🏪', '😈', '🍞'];
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: emojis.map((emoji) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
-          child: Text(
-            emoji,
-            style: const TextStyle(fontSize: 32),
-          ),
-        );
-      }).toList(),
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: emojis.map((emoji) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: Text(
+              emoji,
+              style: const TextStyle(fontSize: 32),
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 }
