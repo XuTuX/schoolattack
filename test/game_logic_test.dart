@@ -55,6 +55,25 @@ void main() {
       expect(expandables.contains(const Point(1, 1)), true);
       expect(expandables.contains(const Point(2, 0)), true);
     });
+
+    test('순번을 드래그 재배치하면 시작 칸과 전투 순서가 변경되어야 한다.', () {
+      final grid = TileGrid();
+      grid.addTile(const Point(0, 0));
+      grid.addTile(const Point(1, 0));
+      grid.addTile(const Point(0, 1));
+
+      final moved = grid.moveTileOrder(const Point(0, 1), const Point(0, 0));
+
+      expect(moved, true);
+      expect(grid.tiles[const Point(0, 1)]?.orderNumber, 1);
+      expect(grid.tiles[const Point(0, 0)]?.orderNumber, 2);
+      expect(grid.tiles[const Point(1, 0)]?.orderNumber, 3);
+
+      final clone = grid.clone();
+      expect(clone.tiles[const Point(0, 1)]?.orderNumber, 1);
+      expect(clone.tiles[const Point(0, 0)]?.orderNumber, 2);
+      expect(clone.tiles[const Point(1, 0)]?.orderNumber, 3);
+    });
   });
 
   group('CharacterInstance 전투 연산 및 스케일링 테스트', () {
@@ -87,14 +106,24 @@ void main() {
 
     test('성급에 따른 스탯 증폭 배율이 정상적으로 적용되어야 한다.', () {
       final template = CharacterTemplate.getByType(
-          CharacterType.normalStudent); // Base: HP 100, ATK 15
+        CharacterType.normalStudent,
+      ); // Base: HP 100, ATK 15
 
-      final star1 =
-          CharacterInstance(id: 's1', template: template, starLevel: 1);
-      final star2 =
-          CharacterInstance(id: 's2', template: template, starLevel: 2);
-      final star3 =
-          CharacterInstance(id: 's3', template: template, starLevel: 3);
+      final star1 = CharacterInstance(
+        id: 's1',
+        template: template,
+        starLevel: 1,
+      );
+      final star2 = CharacterInstance(
+        id: 's2',
+        template: template,
+        starLevel: 2,
+      );
+      final star3 = CharacterInstance(
+        id: 's3',
+        template: template,
+        starLevel: 3,
+      );
 
       expect(star1.currentMaxHp, 100);
       expect(star1.currentAttack, 15);
@@ -120,12 +149,21 @@ void main() {
       final template = CharacterTemplate.getByType(CharacterType.iljin);
 
       // 1성 유닛 3개 생성하여 대기석에 강제 적재
-      gameState.bench[0] =
-          CharacterInstance(id: 'unit1', template: template, starLevel: 1);
-      gameState.bench[1] =
-          CharacterInstance(id: 'unit2', template: template, starLevel: 1);
-      gameState.bench[2] =
-          CharacterInstance(id: 'unit3', template: template, starLevel: 1);
+      gameState.bench[0] = CharacterInstance(
+        id: 'unit1',
+        template: template,
+        starLevel: 1,
+      );
+      gameState.bench[1] = CharacterInstance(
+        id: 'unit2',
+        template: template,
+        starLevel: 1,
+      );
+      gameState.bench[2] = CharacterInstance(
+        id: 'unit3',
+        template: template,
+        starLevel: 1,
+      );
 
       // 합성 조건 수동 실행
       final didCombine = gameState.checkForUpgrades();
@@ -150,10 +188,7 @@ void main() {
       gameState.startBattle();
 
       expect(gameState.phase, GamePhase.prepare);
-      expect(
-        gameState.battleLog.last,
-        '전투를 시작하려면 전장에 유닛을 최소 1명 배치해야 합니다.',
-      );
+      expect(gameState.battleLog.last, '전투를 시작하려면 전장에 유닛을 최소 1명 배치해야 합니다.');
     });
   });
 
@@ -163,16 +198,20 @@ void main() {
       gameState.enterPreparePhase();
 
       final template = CharacterTemplate.getByType(CharacterType.normalStudent);
-      gameState.bench[0] =
-          CharacterInstance(id: 'tap_unit', template: template);
+      gameState.bench[0] = CharacterInstance(
+        id: 'tap_unit',
+        template: template,
+      );
 
       expect(gameState.tapBenchSlot(0), true);
       expect(gameState.selectedBenchIndex, 0);
 
       expect(gameState.tapGridTile(const Point(0, 0)), true);
       expect(gameState.bench[0], null);
-      expect(gameState.playerGrid.tiles[const Point(0, 0)]?.character?.id,
-          'tap_unit');
+      expect(
+        gameState.playerGrid.tiles[const Point(0, 0)]?.character?.id,
+        'tap_unit',
+      );
       expect(gameState.selectedCharacter, null);
     });
 

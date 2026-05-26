@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'character.dart';
 import 'tile_grid.dart';
 import '../services/matchmaker.dart';
-import '../widgets/game_board.dart'; // DragData 참조
 
 enum GamePhase { lobby, prepare, battle, victoryCutscene, gameover }
 
@@ -33,9 +32,6 @@ class GameState extends ChangeNotifier {
   // 매치메이커 서비스
   final MatchmakerService _matchmaker = MatchmakerService();
 
-  // --- 드래그 판매 전용 HUD 상태 ---
-  bool isDragging = false;
-  int? draggingCharacterGold;
   int? selectedBenchIndex;
   Point<int>? selectedGridPos;
 
@@ -83,8 +79,6 @@ class GameState extends ChangeNotifier {
     }
     battleLog.clear();
     currentOpponent = null;
-    isDragging = false;
-    draggingCharacterGold = null;
     clearSelection(notify: false);
     notifyListeners();
   }
@@ -103,7 +97,7 @@ class GameState extends ChangeNotifier {
 
   String get selectionHint {
     final char = selectedCharacter;
-    if (char == null) return '유닛을 탭해서 선택한 뒤 원하는 칸을 탭하세요.';
+    if (char == null) return '유닛은 탭으로 이동하고, 숫자 배지는 드래그해 행동 순서를 바꿉니다.';
     return '${char.name} 선택됨 · 전장이나 대기석을 탭해 이동/교체';
   }
 
@@ -312,6 +306,13 @@ class GameState extends ChangeNotifier {
     return true;
   }
 
+  bool reorderTile(Point<int> from, Point<int> to) {
+    final moved = playerGrid.moveTileOrder(from, to);
+    if (!moved) return false;
+    notifyListeners();
+    return true;
+  }
+
   // 대기석 -> 전장 타일 배치
   bool placeCharacter(int benchIndex, Point<int> pos) {
     if (benchIndex < 0 || benchIndex >= bench.length) return false;
@@ -420,7 +421,8 @@ class GameState extends ChangeNotifier {
           // 진급 수행!
           charToUpgrade.upgradeStar();
           battleLog.add(
-              '🌟 [합성 성공] ${charToUpgrade.name}이(가) ★${charToUpgrade.starLevel}로 진급했습니다!');
+            '🌟 [합성 성공] ${charToUpgrade.name}이(가) ★${charToUpgrade.starLevel}로 진급했습니다!',
+          );
 
           // 나머지 2마리 제거
           final deleteA = list[1];
@@ -453,44 +455,6 @@ class GameState extends ChangeNotifier {
     }
   }
 
-  // --- 🪙 드래그 판매 관련 컨트롤러 ---
-  void startDragging(int goldAmount) {
-    isDragging = true;
-    draggingCharacterGold = goldAmount;
-    notifyListeners();
-  }
-
-  void stopDragging() {
-    isDragging = false;
-    draggingCharacterGold = null;
-    notifyListeners();
-  }
-
-  void sellDraggedCharacter(DragData data) {
-    if (data.source == 'bench') {
-      final char = bench[data.benchIndex!];
-      if (char != null) {
-        final refund = char.cost * char.starLevel;
-        gold += refund;
-        bench[data.benchIndex!] = null;
-        clearSelection(notify: false);
-        battleLog.add(
-            '🪙 [드래그 판매] ${char.name} ★${char.starLevel}를 판매하여 $refund골드를 회수했습니다.');
-      }
-    } else if (data.source == 'grid') {
-      final char = playerGrid.tiles[data.gridPos!]?.character;
-      if (char != null) {
-        final refund = char.cost * char.starLevel;
-        gold += refund;
-        playerGrid.setCharacter(data.gridPos!, null);
-        clearSelection(notify: false);
-        battleLog.add(
-            '🪙 [드래그 판매] ${char.name} ★${char.starLevel}를 판매하여 $refund골드를 회수했습니다.');
-      }
-    }
-    stopDragging();
-  }
-
   // 전투 시작
   void startBattle() {
     if (!canStartBattle) {
@@ -505,7 +469,8 @@ class GameState extends ChangeNotifier {
 
     currentOpponent = _matchmaker.getOpponent(wins, losses);
     battleLog.add(
-        '🏫 대전 상대: [${currentOpponent!.name}] (기록: ${currentOpponent!.wins}승 ${currentOpponent!.losses}패)');
+      '🏫 대전 상대: [${currentOpponent!.name}] (기록: ${currentOpponent!.wins}승 ${currentOpponent!.losses}패)',
+    );
 
     _matchmaker.savePlayerLayout(playerName, wins, losses, playerGrid);
 
@@ -570,7 +535,7 @@ class GameState extends ChangeNotifier {
         const Point(0, -1),
         const Point(0, 1),
         const Point(-1, 0),
-        const Point(1, 0)
+        const Point(1, 0),
       ];
 
       battleLog.add('$prefix 🏋️ 체육 선생님 주변 캐릭터들이 하드 트레이닝으로 최대 체력(+50)을 늘립니다!');
@@ -588,8 +553,6 @@ class GameState extends ChangeNotifier {
 
   // 전투 완료 처리
   void finishBattle(bool playerWon) {
-    isDragging = false;
-    draggingCharacterGold = null;
     if (playerWon) {
       wins++;
       battleLog.add('🎉 승리했습니다! 현재 기록: $wins승 $losses패');

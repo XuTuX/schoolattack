@@ -55,9 +55,7 @@ class MainGameController extends StatelessWidget {
       body: Stack(
         children: [
           const Positioned.fill(child: NeonBackground()),
-          SafeArea(
-            child: _buildPhaseScreen(context, gameState.phase),
-          ),
+          SafeArea(child: _buildPhaseScreen(context, gameState.phase)),
         ],
       ),
     );
@@ -92,11 +90,7 @@ class NeonBackground extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            AppColors.skyTop,
-            AppColors.skyBottom,
-            AppColors.scaffoldBg,
-          ],
+          colors: [AppColors.skyTop, AppColors.skyBottom, AppColors.scaffoldBg],
           stops: [0.0, 0.58, 1.0],
         ),
       ),
@@ -118,7 +112,11 @@ class _BackdropGridPainter extends CustomPainter {
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(
-            -40, groundTop, size.width + 80, size.height - groundTop + 50),
+          -40,
+          groundTop,
+          size.width + 80,
+          size.height - groundTop + 50,
+        ),
         const Radius.elliptical(120, 46),
       ),
       hillPaint,
@@ -135,7 +133,10 @@ class _BackdropGridPainter extends CustomPainter {
     void drawCloud(double x, double y, double scale) {
       canvas.drawCircle(Offset(x, y), 20 * scale, cloudPaint);
       canvas.drawCircle(
-          Offset(x + 24 * scale, y - 8 * scale), 26 * scale, cloudPaint);
+        Offset(x + 24 * scale, y - 8 * scale),
+        26 * scale,
+        cloudPaint,
+      );
       canvas.drawCircle(Offset(x + 54 * scale, y), 20 * scale, cloudPaint);
       canvas.drawRRect(
         RRect.fromRectAndRadius(
@@ -174,8 +175,9 @@ class LobbyScreen extends StatefulWidget {
 
 class _LobbyScreenState extends State<LobbyScreen>
     with TickerProviderStateMixin {
-  final TextEditingController _nameController =
-      TextEditingController(text: '신입생');
+  final TextEditingController _nameController = TextEditingController(
+    text: '신입생',
+  );
 
   late AnimationController _pulseController;
   late AnimationController _floatController;
@@ -269,15 +271,14 @@ class _LobbyScreenState extends State<LobbyScreen>
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.surfaceCard,
                       borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        color: AppColors.outline,
-                        width: 2,
-                      ),
+                      border: Border.all(color: AppColors.outline, width: 2),
                     ),
                     child: const Text(
                       '타일을 넓히고, 배치를 다듬고, 자동 전투로 10승까지',
@@ -316,16 +317,21 @@ class _LobbyScreenState extends State<LobbyScreen>
                               counterText: '',
                               filled: true,
                               fillColor: AppColors.surfaceCard,
-                              contentPadding:
-                                  const EdgeInsets.symmetric(vertical: 12),
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                              ),
                               enabledBorder: OutlineInputBorder(
                                 borderSide: BorderSide(
-                                    color: AppColors.outline, width: 2),
+                                  color: AppColors.outline,
+                                  width: 2,
+                                ),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderSide: const BorderSide(
-                                    color: AppColors.neonCyan, width: 3),
+                                  color: AppColors.neonCyan,
+                                  width: 3,
+                                ),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
@@ -349,7 +355,8 @@ class _LobbyScreenState extends State<LobbyScreen>
                                   boxShadow: [
                                     BoxShadow(
                                       color: AppColors.outline.withValues(
-                                          alpha: glowOpacity + 0.10),
+                                        alpha: glowOpacity + 0.10,
+                                      ),
                                       blurRadius: 0,
                                       offset: const Offset(0, 5),
                                     ),
@@ -373,12 +380,14 @@ class _LobbyScreenState extends State<LobbyScreen>
                                     ),
                                   ),
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 40, vertical: 16),
+                                    horizontal: 40,
+                                    vertical: 16,
+                                  ),
                                 ),
                                 onPressed: () {
                                   if (_nameController.text.trim().isNotEmpty) {
-                                    gameState.playerName =
-                                        _nameController.text.trim();
+                                    gameState.playerName = _nameController.text
+                                        .trim();
                                   }
                                   gameState.enterPreparePhase();
                                 },
@@ -428,10 +437,7 @@ class _FloatingEmojis extends StatelessWidget {
         children: emojis.map((emoji) {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: Text(
-              emoji,
-              style: const TextStyle(fontSize: 32),
-            ),
+            child: Text(emoji, style: const TextStyle(fontSize: 32)),
           );
         }).toList(),
       ),
@@ -448,148 +454,179 @@ class PrepareScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gameState = Provider.of<GameState>(context);
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // ─── 상단 정보 바 ───
-          GlassPanel(
-            borderNeonColor: AppColors.neonCyan.withValues(alpha: 0.3),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // 라운드 표시
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            AppColors.neonCyan.withValues(alpha: 0.2),
-                            AppColors.neonCyan.withValues(alpha: 0.05),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: AppColors.neonCyan.withValues(alpha: 0.4),
-                        ),
-                      ),
-                      child: Text(
-                        'ROUND ${gameState.wins + gameState.losses + 1}',
-                        style: const TextStyle(
-                          color: AppColors.neonCyan,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                    ),
-                    // 도움말
-                    IconButton(
-                      visualDensity: VisualDensity.compact,
-                      icon: const Icon(Icons.help_outline,
-                          color: AppColors.neonCyan, size: 20),
-                      onPressed: () => _showGuideDialog(context),
-                    ),
-                  ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final boardHeight = min(
+          300.0,
+          max(220.0, constraints.maxHeight * 0.34),
+        );
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // ─── 상단 정보 바 ───
+              GlassPanel(
+                borderNeonColor: AppColors.neonCyan.withValues(alpha: 0.3),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
                 ),
-                const SizedBox(height: 8),
-                // ─── 승/패 진행 바 ───
-                Row(
+                child: Column(
                   children: [
-                    // 승리 진행 바
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // 라운드 표시
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppColors.neonCyan.withValues(alpha: 0.2),
+                                AppColors.neonCyan.withValues(alpha: 0.05),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: AppColors.neonCyan.withValues(alpha: 0.4),
+                            ),
+                          ),
+                          child: Text(
+                            'ROUND ${gameState.wins + gameState.losses + 1}',
+                            style: const TextStyle(
+                              color: AppColors.neonCyan,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                        ),
+                        // 도움말
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          icon: const Icon(
+                            Icons.help_outline,
+                            color: AppColors.neonCyan,
+                            size: 20,
+                          ),
+                          onPressed: () => _showGuideDialog(context),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // ─── 승/패 진행 바 ───
+                    Row(
+                      children: [
+                        // 승리 진행 바
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.emoji_events,
-                                  color: AppColors.winGreen, size: 14),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${gameState.wins}/${gameState.maxWins}승',
-                                style: const TextStyle(
-                                  color: AppColors.winGreen,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 11,
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.emoji_events,
+                                    color: AppColors.winGreen,
+                                    size: 14,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${gameState.wins}/${gameState.maxWins}승',
+                                    style: const TextStyle(
+                                      color: AppColors.winGreen,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: gameState.wins / gameState.maxWins,
+                                  minHeight: 5,
+                                  backgroundColor: AppColors.winGreen
+                                      .withValues(alpha: 0.12),
+                                  valueColor:
+                                      const AlwaysStoppedAnimation<Color>(
+                                        AppColors.winGreen,
+                                      ),
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 4),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: LinearProgressIndicator(
-                              value: gameState.wins / gameState.maxWins,
-                              minHeight: 5,
-                              backgroundColor:
-                                  AppColors.winGreen.withValues(alpha: 0.12),
-                              valueColor: const AlwaysStoppedAnimation<Color>(
-                                  AppColors.winGreen),
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: 16),
+                        // 라이프 하트 표시
+                        Row(
+                          children: List.generate(gameState.maxLosses, (index) {
+                            final isLost = index < gameState.losses;
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 1.5,
+                              ),
+                              child: Icon(
+                                isLost ? Icons.favorite_border : Icons.favorite,
+                                color: isLost
+                                    ? AppColors.textMuted.withValues(
+                                        alpha: 0.35,
+                                      )
+                                    : AppColors.damageRed,
+                                size: 18,
+                              ),
+                            );
+                          }),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 16),
-                    // 라이프 하트 표시
+                    const SizedBox(height: 6),
                     Row(
-                      children: List.generate(gameState.maxLosses, (index) {
-                        final isLost = index < gameState.losses;
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 1.5),
-                          child: Icon(
-                            isLost ? Icons.favorite_border : Icons.favorite,
-                            color: isLost
-                                ? AppColors.textMuted.withValues(alpha: 0.35)
-                                : AppColors.damageRed,
-                            size: 18,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '배치 ${gameState.activeBoardUnitCount}명',
+                          style: const TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 11,
                           ),
-                        );
-                      }),
+                        ),
+                        Text(
+                          '다음 기본 보상 ${gameState.roundIncome}G',
+                          style: const TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '배치 ${gameState.activeBoardUnitCount}명',
-                      style: const TextStyle(
-                          color: AppColors.textMuted, fontSize: 11),
-                    ),
-                    Text(
-                      '다음 기본 보상 ${gameState.roundIncome}G',
-                      style: const TextStyle(
-                          color: AppColors.textMuted, fontSize: 11),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
+              ),
+              const SizedBox(height: 10),
 
-          // 2D 전장 그리드
-          const Expanded(
-            child: GameBoard(isInteractive: true),
-          ),
-          const SizedBox(height: 12),
+              // 2D 전장 그리드
+              SizedBox(
+                height: boardHeight,
+                child: const GameBoard(isInteractive: true),
+              ),
+              const SizedBox(height: 12),
 
-          // 상점 및 컨트롤 패널
-          const GlassPanel(
-            borderNeonColor: AppColors.neonGold,
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-            child: ShopPanel(),
+              // 상점 및 컨트롤 패널
+              const GlassPanel(
+                borderNeonColor: AppColors.neonGold,
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                child: ShopPanel(),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -610,8 +647,11 @@ class PrepareScreen extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.menu_book_rounded,
-                            color: AppColors.neonCyan, size: 18),
+                        Icon(
+                          Icons.menu_book_rounded,
+                          color: AppColors.neonCyan,
+                          size: 18,
+                        ),
                         SizedBox(width: 6),
                         Text(
                           '게임 규칙',
@@ -634,7 +674,10 @@ class PrepareScreen extends StatelessWidget {
                   const Text(
                     '상세 규칙은 docs/GAME_RULES.md에 정리되어 있습니다.',
                     style: TextStyle(
-                        color: AppColors.textDim, fontSize: 10, height: 1.5),
+                      color: AppColors.textDim,
+                      fontSize: 10,
+                      height: 1.5,
+                    ),
                   ),
                   const SizedBox(height: 20),
                   Center(
@@ -643,13 +686,18 @@ class PrepareScreen extends StatelessWidget {
                         backgroundColor: AppColors.neonCyan,
                         foregroundColor: AppColors.textPrimary,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 28, vertical: 10),
+                          horizontal: 28,
+                          vertical: 10,
+                        ),
                       ),
                       onPressed: () => Navigator.pop(context),
-                      child: const Text('확인',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        '확인',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
                 ],
@@ -692,7 +740,10 @@ class PrepareScreen extends StatelessWidget {
             child: Text(
               text,
               style: const TextStyle(
-                  color: AppColors.textSecondary, fontSize: 12, height: 1.5),
+                color: AppColors.textSecondary,
+                fontSize: 12,
+                height: 1.5,
+              ),
             ),
           ),
         ],
@@ -739,15 +790,17 @@ class _VictoryCutsceneScreenState extends State<VictoryCutsceneScreen>
     final rng = Random();
     const emojis = ['🎉', '👑', '⭐', '🏆', '✨', '🎊', '🥇'];
     for (int i = 0; i < 30; i++) {
-      _particles.add(_ConfettiParticle(
-        emoji: emojis[rng.nextInt(emojis.length)],
-        x: rng.nextDouble(),
-        startY: -0.1 - rng.nextDouble() * 0.5,
-        speed: 0.3 + rng.nextDouble() * 0.6,
-        drift: (rng.nextDouble() - 0.5) * 0.2,
-        size: 14.0 + rng.nextDouble() * 14,
-        delay: rng.nextDouble(),
-      ));
+      _particles.add(
+        _ConfettiParticle(
+          emoji: emojis[rng.nextInt(emojis.length)],
+          x: rng.nextDouble(),
+          startY: -0.1 - rng.nextDouble() * 0.5,
+          speed: 0.3 + rng.nextDouble() * 0.6,
+          drift: (rng.nextDouble() - 0.5) * 0.2,
+          size: 14.0 + rng.nextDouble() * 14,
+          delay: rng.nextDouble(),
+        ),
+      );
     }
   }
 
@@ -767,25 +820,24 @@ class _VictoryCutsceneScreenState extends State<VictoryCutsceneScreen>
       children: [
         // 컨펫티 이모지 파티클
         for (final p in _particles)
-          Builder(builder: (context) {
-            double progress = (_confettiController.value + p.delay) % 1.0;
-            double y = p.startY + progress * 1.5;
-            double x = p.x + sin(progress * pi * 3) * p.drift;
-            double opacity = y > 0.8 ? max(0, 1.0 - (y - 0.8) * 5) : 1.0;
-            if (y < 0) opacity = 0;
+          Builder(
+            builder: (context) {
+              double progress = (_confettiController.value + p.delay) % 1.0;
+              double y = p.startY + progress * 1.5;
+              double x = p.x + sin(progress * pi * 3) * p.drift;
+              double opacity = y > 0.8 ? max(0, 1.0 - (y - 0.8) * 5) : 1.0;
+              if (y < 0) opacity = 0;
 
-            return Positioned(
-              left: x * size.width,
-              top: y * size.height,
-              child: Opacity(
-                opacity: opacity.clamp(0.0, 1.0),
-                child: Text(
-                  p.emoji,
-                  style: TextStyle(fontSize: p.size),
+              return Positioned(
+                left: x * size.width,
+                top: y * size.height,
+                child: Opacity(
+                  opacity: opacity.clamp(0.0, 1.0),
+                  child: Text(p.emoji, style: TextStyle(fontSize: p.size)),
                 ),
-              ),
-            );
-          }),
+              );
+            },
+          ),
 
         // 메인 콘텐츠
         Center(
@@ -799,8 +851,9 @@ class _VictoryCutsceneScreenState extends State<VictoryCutsceneScreen>
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.amber
-                            .withValues(alpha: _glowAnimation.value * 0.15),
+                        color: Colors.amber.withValues(
+                          alpha: _glowAnimation.value * 0.15,
+                        ),
                         blurRadius: 40,
                         spreadRadius: 8,
                       ),
@@ -842,35 +895,46 @@ class _VictoryCutsceneScreenState extends State<VictoryCutsceneScreen>
                       '학교 모든 구역의 오토배틀 강자들을 꺾고\n'
                       '급식 배식권 1순위를 공식 쟁취하셨습니다!',
                       style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
-                          height: 1.6),
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                        height: 1.6,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 16),
                     // 전적 통계
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 10),
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.amber.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                            color: Colors.amber.withValues(alpha: 0.2)),
+                          color: Colors.amber.withValues(alpha: 0.2),
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           _statBadge(
-                              '승', '${gameState.wins}', AppColors.winGreen),
+                            '승',
+                            '${gameState.wins}',
+                            AppColors.winGreen,
+                          ),
                           const SizedBox(width: 16),
                           _statBadge(
-                              '패', '${gameState.losses}', AppColors.damageRed),
+                            '패',
+                            '${gameState.losses}',
+                            AppColors.damageRed,
+                          ),
                           const SizedBox(width: 16),
                           _statBadge(
-                              '총 라운드',
-                              '${gameState.wins + gameState.losses}',
-                              AppColors.neonCyan),
+                            '총 라운드',
+                            '${gameState.wins + gameState.losses}',
+                            AppColors.neonCyan,
+                          ),
                         ],
                       ),
                     ),
@@ -882,17 +946,24 @@ class _VictoryCutsceneScreenState extends State<VictoryCutsceneScreen>
                           backgroundColor: AppColors.neonGold,
                           foregroundColor: AppColors.textPrimary,
                           side: const BorderSide(
-                              color: AppColors.outline, width: 2),
+                            color: AppColors.outline,
+                            width: 2,
+                          ),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 32, vertical: 14),
+                            horizontal: 32,
+                            vertical: 14,
+                          ),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                         onPressed: () => gameState.startNewGame(),
                         child: const Text(
                           '새 게임 시작하기',
                           style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 14),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
                     ),
@@ -992,10 +1063,7 @@ class _GameoverScreenState extends State<GameoverScreen>
           animation: _shakeAnimation,
           builder: (context, child) {
             final shake = sin(_shakeAnimation.value * pi * 6) * 6;
-            return Transform.translate(
-              offset: Offset(shake, 0),
-              child: child,
-            );
+            return Transform.translate(offset: Offset(shake, 0), child: child);
           },
           child: GlassPanel(
             borderNeonColor: AppColors.defeatRed,
@@ -1005,11 +1073,7 @@ class _GameoverScreenState extends State<GameoverScreen>
                 ShaderMask(
                   shaderCallback: (Rect bounds) {
                     return const LinearGradient(
-                      colors: [
-                        Colors.redAccent,
-                        Color(0xFFFF6B6B),
-                        Colors.red,
-                      ],
+                      colors: [Colors.redAccent, Color(0xFFFF6B6B), Colors.red],
                     ).createShader(bounds);
                   },
                   child: const Text(
@@ -1039,13 +1103,16 @@ class _GameoverScreenState extends State<GameoverScreen>
                 const SizedBox(height: 16),
                 // 전적 통계
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.red.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(8),
-                    border:
-                        Border.all(color: Colors.red.withValues(alpha: 0.2)),
+                    border: Border.all(
+                      color: Colors.red.withValues(alpha: 0.2),
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -1053,20 +1120,21 @@ class _GameoverScreenState extends State<GameoverScreen>
                       _statBadge('승', '${gameState.wins}', AppColors.winGreen),
                       const SizedBox(width: 16),
                       _statBadge(
-                          '패', '${gameState.losses}', AppColors.damageRed),
+                        '패',
+                        '${gameState.losses}',
+                        AppColors.damageRed,
+                      ),
                       const SizedBox(width: 16),
                       _statBadge(
-                          '총 라운드',
-                          '${gameState.wins + gameState.losses}',
-                          AppColors.neonCyan),
+                        '총 라운드',
+                        '${gameState.wins + gameState.losses}',
+                        AppColors.neonCyan,
+                      ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  '🍞 😭 🎒 🏪',
-                  style: TextStyle(fontSize: 32),
-                ),
+                const Text('🍞 😭 🎒 🏪', style: TextStyle(fontSize: 32)),
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
@@ -1074,18 +1142,25 @@ class _GameoverScreenState extends State<GameoverScreen>
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.defeatRed,
                       foregroundColor: Colors.white,
-                      side:
-                          const BorderSide(color: AppColors.outline, width: 2),
+                      side: const BorderSide(
+                        color: AppColors.outline,
+                        width: 2,
+                      ),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 32, vertical: 14),
+                        horizontal: 32,
+                        vertical: 14,
+                      ),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                     onPressed: () => gameState.startNewGame(),
                     child: const Text(
                       '다시 도전하기',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
                 ),

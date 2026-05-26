@@ -6,14 +6,6 @@ import '../models/character.dart';
 import '../models/game_state.dart';
 import '../models/tile_grid.dart';
 
-class DragData {
-  final String source; // 'bench' or 'grid'
-  final int? benchIndex;
-  final Point<int>? gridPos;
-
-  DragData({required this.source, this.benchIndex, this.gridPos});
-}
-
 class GameBoard extends StatefulWidget {
   final bool isInteractive;
 
@@ -63,8 +55,9 @@ class _GameBoardState extends State<GameBoard>
       );
     }
 
-    final expandables =
-        widget.isInteractive ? grid.getExpandablePositions() : <Point<int>>[];
+    final expandables = widget.isInteractive
+        ? grid.getExpandablePositions()
+        : <Point<int>>[];
     final points = [...tiles.keys, ...expandables];
     final minX = points.map((p) => p.x).reduce(min);
     final maxX = points.map((p) => p.x).reduce(max);
@@ -75,7 +68,6 @@ class _GameBoardState extends State<GameBoard>
     final rowCount = maxY - minY + 1;
 
     return Container(
-      height: 300,
       decoration: BoxDecoration(
         color: const Color(0xFF7CC466),
         borderRadius: BorderRadius.circular(14),
@@ -120,11 +112,7 @@ class _GameBoardState extends State<GameBoard>
                           top: startY + (pos.y - minY) * step,
                           width: cellSize,
                           height: cellSize,
-                          child: _buildExpansionTile(
-                            context,
-                            gameState,
-                            pos,
-                          ),
+                          child: _buildExpansionTile(context, gameState, pos),
                         ),
                     for (final tile in tiles.values)
                       Positioned(
@@ -145,59 +133,24 @@ class _GameBoardState extends State<GameBoard>
   }
 
   Widget _buildTile(BuildContext context, GameState gameState, Tile tile) {
-    return DragTarget<DragData>(
+    return DragTarget<Point<int>>(
       onWillAcceptWithDetails: (_) => widget.isInteractive,
-      onAcceptWithDetails: (details) {
-        final data = details.data;
-        if (data.source == 'bench') {
-          gameState.placeCharacter(data.benchIndex!, tile.position);
-        } else if (data.source == 'grid') {
-          gameState.moveGridCharacter(data.gridPos!, tile.position);
-        }
-      },
+      onAcceptWithDetails: (details) =>
+          gameState.reorderTile(details.data, tile.position),
       builder: (context, candidateData, rejectedData) {
         final char = tile.character;
         final isOver = candidateData.isNotEmpty;
         final isSelected = gameState.selectedGridPos == tile.position;
         final hasSelection = gameState.selectedCharacter != null;
 
-        Widget tileContent = _TileCard(
+        final tileContent = _TileCard(
           tile: tile,
           character: char,
           isOver: isOver,
           isSelected: isSelected,
           hasSelection: hasSelection,
+          canReorder: widget.isInteractive,
         );
-
-        if (char != null && widget.isInteractive) {
-          tileContent = Draggable<DragData>(
-            data: DragData(source: 'grid', gridPos: tile.position),
-            feedback: Material(
-              color: Colors.transparent,
-              child: SizedBox(
-                width: 86,
-                height: 86,
-                child: Opacity(opacity: 0.88, child: tileContent),
-              ),
-            ),
-            childWhenDragging: Opacity(
-              opacity: 0.25,
-              child: _TileCard(
-                tile: tile,
-                character: null,
-                isOver: false,
-                isSelected: false,
-                hasSelection: false,
-              ),
-            ),
-            onDragStarted: () {
-              gameState.startDragging(char.cost * char.starLevel);
-            },
-            onDragEnd: (_) => gameState.stopDragging(),
-            onDraggableCanceled: (_, _) => gameState.stopDragging(),
-            child: tileContent,
-          );
-        }
 
         if (!widget.isInteractive) return tileContent;
 
@@ -279,6 +232,7 @@ class _TileCard extends StatelessWidget {
   final bool isOver;
   final bool isSelected;
   final bool hasSelection;
+  final bool canReorder;
 
   const _TileCard({
     required this.tile,
@@ -286,6 +240,7 @@ class _TileCard extends StatelessWidget {
     required this.isOver,
     required this.isSelected,
     required this.hasSelection,
+    required this.canReorder,
   });
 
   @override
@@ -299,19 +254,19 @@ class _TileCard extends StatelessWidget {
         color: isSelected
             ? const Color(0xFFFFD86B)
             : isOver
-                ? AppColors.neonCyanLight
-                : char == null
-                    ? const Color(0xFFE7F2D5)
-                    : AppColors.surfaceCard,
+            ? AppColors.neonCyanLight
+            : char == null
+            ? const Color(0xFFE7F2D5)
+            : AppColors.surfaceCard,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isSelected
               ? AppColors.neonGold
               : isOver || hasSelection
-                  ? AppColors.neonCyan
-                  : char == null
-                      ? AppColors.outline.withValues(alpha: 0.35)
-                      : gradeColor,
+              ? AppColors.neonCyan
+              : char == null
+              ? AppColors.outline.withValues(alpha: 0.35)
+              : gradeColor,
           width: isSelected || isOver || char != null ? 2.5 : 1.5,
         ),
         boxShadow: [
@@ -328,7 +283,11 @@ class _TileCard extends StatelessWidget {
           Positioned(
             top: 5,
             left: 5,
-            child: _OrderBadge(orderNumber: tile.orderNumber),
+            child: _OrderHandle(
+              position: tile.position,
+              orderNumber: tile.orderNumber,
+              canReorder: canReorder,
+            ),
           ),
           if (char == null)
             Icon(
@@ -371,78 +330,137 @@ class _CharacterTileContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned(
-          top: 5,
-          right: 5,
-          child: Row(
-            children: List.generate(
-              character.starLevel,
-              (_) => const Icon(
-                Icons.star_rounded,
-                color: AppColors.neonGold,
-                size: 10,
-              ),
-            ),
-          ),
-        ),
-        Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 8),
-              Text(character.emoji, style: const TextStyle(fontSize: 34)),
-              Text(
-                character.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 9,
-                  fontWeight: FontWeight.w800,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = min(constraints.maxWidth, constraints.maxHeight);
+        final emojiSize = min(34.0, max(22.0, size * 0.42));
+        final nameFontSize = min(9.0, max(7.0, size * 0.12));
+        final statHeight = min(22.0, max(17.0, size * 0.26));
+        final statMinWidth = min(28.0, max(22.0, size * 0.36));
+        final starSize = min(10.0, max(7.0, size * 0.13));
+        final edge = min(5.0, max(3.0, size * 0.07));
+
+        return Stack(
+          children: [
+            Positioned(
+              top: edge,
+              right: edge,
+              child: Row(
+                children: List.generate(
+                  character.starLevel,
+                  (_) => Icon(
+                    Icons.star_rounded,
+                    color: AppColors.neonGold,
+                    size: starSize,
+                  ),
                 ),
               ),
-            ],
-          ),
-        ),
-        Positioned(
-          bottom: 5,
-          left: 5,
-          child: _BoardStatBadge(
-            icon: Icons.flash_on_rounded,
-            value: character.currentAttack,
-            color: AppColors.neonGold,
-          ),
-        ),
-        Positioned(
-          bottom: 5,
-          right: 5,
-          child: _BoardStatBadge(
-            icon: Icons.favorite_rounded,
-            value: character.currentHp,
-            color: AppColors.damageRed,
-          ),
-        ),
-        if (character.shield > 0)
-          Positioned(
-            top: 22,
-            right: 5,
-            child: _StatusPill(
-              text: 'S${character.shield}',
-              color: AppColors.shieldBlue,
             ),
-          ),
-        if (character.poisonDuration > 0)
-          Positioned(
-            top: 22,
-            left: 5,
-            child: _StatusPill(
-              text: 'P${character.poisonDuration}',
-              color: AppColors.poisonPurple,
+            Positioned.fill(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(4, size * 0.16, 4, statHeight + 7),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          character.emoji,
+                          style: TextStyle(fontSize: emojiSize),
+                        ),
+                      ),
+                    ),
+                    Text(
+                      character.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: nameFontSize,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-      ],
+            Positioned(
+              bottom: edge,
+              left: edge,
+              child: _BoardStatBadge(
+                icon: Icons.flash_on_rounded,
+                value: character.currentAttack,
+                color: AppColors.neonGold,
+                height: statHeight,
+                minWidth: statMinWidth,
+              ),
+            ),
+            Positioned(
+              bottom: edge,
+              right: edge,
+              child: _BoardStatBadge(
+                icon: Icons.favorite_rounded,
+                value: character.currentHp,
+                color: AppColors.damageRed,
+                height: statHeight,
+                minWidth: statMinWidth,
+              ),
+            ),
+            if (character.shield > 0)
+              Positioned(
+                top: size * 0.30,
+                right: edge,
+                child: _StatusPill(
+                  text: 'S${character.shield}',
+                  color: AppColors.shieldBlue,
+                  fontSize: min(8.0, max(6.0, size * 0.10)),
+                ),
+              ),
+            if (character.poisonDuration > 0)
+              Positioned(
+                top: size * 0.30,
+                left: edge,
+                child: _StatusPill(
+                  text: 'P${character.poisonDuration}',
+                  color: AppColors.poisonPurple,
+                  fontSize: min(8.0, max(6.0, size * 0.10)),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _OrderHandle extends StatelessWidget {
+  final Point<int> position;
+  final int orderNumber;
+  final bool canReorder;
+
+  const _OrderHandle({
+    required this.position,
+    required this.orderNumber,
+    required this.canReorder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final badge = _OrderBadge(orderNumber: orderNumber);
+    if (!canReorder) return badge;
+
+    return Draggable<Point<int>>(
+      data: position,
+      feedback: Material(
+        color: Colors.transparent,
+        child: Transform.scale(
+          scale: 1.2,
+          child: _OrderBadge(orderNumber: orderNumber),
+        ),
+      ),
+      childWhenDragging: Opacity(opacity: 0.35, child: badge),
+      child: badge,
     );
   }
 }
@@ -454,19 +472,20 @@ class _OrderBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isStart = orderNumber == 1;
     return Container(
-      width: 20,
-      height: 20,
+      width: isStart ? 24 : 20,
+      height: isStart ? 24 : 20,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
+        color: isStart ? AppColors.neonPink : AppColors.surfaceCard,
         shape: BoxShape.circle,
         border: Border.all(color: AppColors.outline, width: 1.4),
       ),
       child: Text(
         '$orderNumber',
-        style: const TextStyle(
-          color: AppColors.textPrimary,
+        style: TextStyle(
+          color: isStart ? Colors.white : AppColors.textPrimary,
           fontSize: 9,
           fontWeight: FontWeight.w900,
         ),
@@ -479,18 +498,22 @@ class _BoardStatBadge extends StatelessWidget {
   final IconData icon;
   final int value;
   final Color color;
+  final double height;
+  final double minWidth;
 
   const _BoardStatBadge({
     required this.icon,
     required this.value,
     required this.color,
+    this.height = 22,
+    this.minWidth = 28,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(minWidth: 28),
-      height: 22,
+      constraints: BoxConstraints(minWidth: minWidth),
+      height: height,
       padding: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
         color: color,
@@ -504,9 +527,9 @@ class _BoardStatBadge extends StatelessWidget {
           Icon(icon, color: Colors.white, size: 8),
           Text(
             '$value',
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
-              fontSize: 8,
+              fontSize: min(8.0, max(6.0, height * 0.38)),
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -519,8 +542,13 @@ class _BoardStatBadge extends StatelessWidget {
 class _StatusPill extends StatelessWidget {
   final String text;
   final Color color;
+  final double fontSize;
 
-  const _StatusPill({required this.text, required this.color});
+  const _StatusPill({
+    required this.text,
+    required this.color,
+    this.fontSize = 8,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -533,9 +561,9 @@ class _StatusPill extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
           color: Colors.white,
-          fontSize: 8,
+          fontSize: fontSize,
           fontWeight: FontWeight.w900,
         ),
       ),
